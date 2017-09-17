@@ -43,22 +43,42 @@ void bwputs(char *s) {
 struct screen scr;
 struct terminal term;
 
+#define char_visible(c) ((c) >= 32 && (c) <= 127)
+
 void handler(unsigned k)
 {
-    // if (k & LCTRL_MASK || k & RCTRL_MASK) {
-    //     term_putchar(&term, 'C');
-    // }
-    // if (k & LALT_MASK || k & RALT_MASK) {
-    //     term_putchar(&term, 'A');
-    // }
-    // if (k & LSHIFT_MASK || k & RSHIFT_MASK) {
-    //     term_putchar(&term, 'S');
-    // }
-    // if (k & LGUI_MASK || k & RGUI_MASK) {
-    //     term_putchar(&term, 'G');
-    // }
-    // term_putchar(&term, k & 0xFF);
-    term_up(&term);
+    char realchar = k & 0xFF;
+    if (k & LSHIFT_MASK || k & RSHIFT_MASK) {
+        if (realchar >= 'a' && realchar <= 'z') {
+            realchar += ('A' - 'a');
+        } else {
+            switch (realchar) {
+            case '`': realchar = '~'; break;
+            case '1': realchar = '!'; break;
+            case '2': realchar = '@'; break;
+            case '3': realchar = '#'; break;
+            case '4': realchar = '$'; break;
+            case '5': realchar = '%'; break;
+            case '6': realchar = '^'; break;
+            case '7': realchar = '&'; break;
+            case '8': realchar = '*'; break;
+            case '9': realchar = '('; break;
+            case '0': realchar = ')'; break;
+            case '-': realchar = '_'; break;
+            case '=': realchar = '+'; break;
+            case '[': realchar = '{'; break;
+            case ']': realchar = '}'; break;
+            case ';': realchar = ';'; break;
+            case '\'': realchar = '\"'; break;
+            case ',': realchar = '<'; break;
+            case '.': realchar = '>'; break;
+            case '/': realchar = '?'; break;
+            case '\\': realchar = '|'; break;
+            default: break;
+            }
+        }
+    }
+    term_putchar(&term, realchar);
 }
 
 int main(void)
@@ -78,6 +98,9 @@ int main(void)
     for (unsigned i = 32; i < 128; ++i) {
         term_putchar(&term, i);
     }
+
+    /* Set up MMC connection */
+    *(volatile unsigned *)(0x10005000) = 0x03;
 
     for (;;) {
         if (*(volatile unsigned int *)(0x10003000) & 0x08) {

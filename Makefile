@@ -5,7 +5,8 @@ CFLAGS = -ansi -pedantic -Wall -Wextra -march=armv6 -O2 \
 		 -msoft-float -fPIC -mapcs-frame -marm -std=c99 -I$(INC)
 LDFLAGS = -N -Ttext=0x10000
 BUILD = ./build
-OBJ = bootstrap.o kernel.o context_switch.o syscalls.o display.o terminal.o keyboard.o
+OBJ = bootstrap.o kernel.o context_switch.o syscalls.o display.o \
+	  terminal.o keyboard.o shell.o
 INC = ./include
 
 kernel.elf : $(OBJ)
@@ -32,9 +33,12 @@ terminal.o : drivers/terminal.c $(INC)/display.h
 keyboard.o : drivers/keyboard.c $(INC)/display.h
 	$(CC) $(CFLAGS) -c drivers/keyboard.c -o $(BUILD)/keyboard.o
 
+shell.o : kernel/shell.c $(INC)/display.h
+	$(CC) $(CFLAGS) -c kernel/shell.c -o $(BUILD)/shell.o
+
 .PHONY : run
 run : kernel.elf
-	qemu-system-arm -M versatilepb -cpu arm1176 -kernel $(BUILD)/kernel.elf -serial stdio
+	qemu-system-arm -M versatilepb -cpu arm1176 -kernel $(BUILD)/kernel.elf -serial stdio -sd ./system.img
 
 .PHONY : clean
 clean :

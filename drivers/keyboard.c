@@ -182,7 +182,7 @@ void handle_key(uint8_t key, void (*cbk)(unsigned))
     SIMPLE_KEY_CHOICE(O, 'o')
     SIMPLE_KEY_CHOICE(P, 'p')
     SIMPLE_KEY_CHOICE(Q, 'q')
-    SIMPLE_KEY_CHOICE(R, 'e')
+    SIMPLE_KEY_CHOICE(R, 'r')
     SIMPLE_KEY_CHOICE(S, 's')
     SIMPLE_KEY_CHOICE(T, 't')
     SIMPLE_KEY_CHOICE(U, 'u')
@@ -213,7 +213,8 @@ void handle_key(uint8_t key, void (*cbk)(unsigned))
     SIMPLE_KEY_CHOICE(DOT, '.')
     SIMPLE_KEY_CHOICE(SLASH, '/')
     SIMPLE_KEY_CHOICE(SPACE, ' ')
-    /* SIMPLE_KEY_CHOICE(ENTER, '\n') */
+    SIMPLE_KEY_CHOICE(ENTER, '\n')
+    SIMPLE_KEY_CHOICE(BKSP, '\b')
     default:
         break;
     }

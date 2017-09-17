@@ -51,6 +51,7 @@ struct terminal {
 
 void term_full(struct screen * scr, struct terminal * term);
 void term_putchar(struct terminal * term, char ch);
+void term_unput(struct terminal * term);
 void term_clear(struct terminal * term);
 
 #endif /* DISPLAY_H */

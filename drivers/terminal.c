@@ -129,9 +129,27 @@ void term_full(struct screen * scr, struct terminal * term)
 void term_putchar(struct terminal * term, char ch)
 {
     unsigned rm = (term->lt).x + term->width;
+    if (ch == '\n') {
+        if ((term->cursor).y + 2 * FONT_HEIGHT >
+                (term->lt).y + term->height) {
+            term_up(term);
+        } else {
+            (term->cursor).y += FONT_HEIGHT;
+        }
+        (term->cursor).x = (term->lt).x;
+        return;
+    } else if (ch == '\b') {
+        term_unput(term);
+        return;
+    }
     if ((term->cursor).x + FONT_WIDTH > rm) {
-        (term->cursor).y += FONT_HEIGHT;
-        (term->cursor).x = 0;
+        if ((term->cursor).y + 2 * FONT_HEIGHT >
+                (term->lt).y + term->height) {
+            term_up(term);
+        } else {
+            (term->cursor).y += FONT_HEIGHT;
+        }
+        (term->cursor).x = (term->lt).x;
     }
     struct screen_point pt;
     for (unsigned j = 0; j < FONT_WIDTH; ++j) {
@@ -178,4 +196,33 @@ void term_up(struct terminal * term)
             screen_draw_point(term->board, pt, term->bg_color);
         }
     }
+}
+
+void term_unput(struct terminal * term)
+{
+    struct screen_point pt;
+    if ((term->cursor).x - (term->lt).x < FONT_WIDTH) {
+        if ((term->cursor).y <= (term->lt).y) {
+            return;
+        } else {
+            for (unsigned j = 0; j < FONT_WIDTH; ++j) {
+                pt.x = j + (term->lt).x;
+                for (unsigned i = 0; i < FONT_HEIGHT; ++i) {
+                    pt.y = i + (term->cursor).y + (term->lt).y;
+                    screen_draw_point(term->board, pt, term->bg_color);
+                }
+            }
+            (term->cursor).y -= FONT_HEIGHT;
+            (term->cursor).x = (term->lt).x - (term->width % FONT_WIDTH);
+            return;
+        }
+    }
+    for (unsigned j = 0; j < FONT_WIDTH; ++j) {
+        pt.x = j + (term->lt).x + (term->cursor).x;
+        for (unsigned i = 0; i < FONT_HEIGHT; ++i) {
+            pt.y = i + (term->cursor).y + (term->lt).y;
+            screen_draw_point(term->board, pt, term->bg_color);
+        }
+    }
+    (term->cursor).x -= FONT_WIDTH;
 }
