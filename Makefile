@@ -5,8 +5,8 @@ CFLAGS = -ansi -pedantic -Wall -Wextra -march=armv6 -O2 \
 		 -msoft-float -fPIC -mapcs-frame -marm -std=c99 -I$(INC)
 LDFLAGS = -N -Ttext=0x10000
 BUILD = ./build
-OBJ = bootstrap.o kernel.o context_switch.o syscalls.o display.o \
-	  terminal.o keyboard.o shell.o
+OBJ = bootstrap.o main.o context_switch.o syscalls.o display.o \
+	  terminal.o keyboard.o shell.o string.o utils.o
 INC = ./include
 
 kernel.elf : $(OBJ)
@@ -15,8 +15,8 @@ kernel.elf : $(OBJ)
 bootstrap.o : arch/arm/versatilepb/bootstrap.s
 	$(CC) $(CFLAGS) -c arch/arm/versatilepb/bootstrap.s -o $(BUILD)/bootstrap.o
 
-kernel.o : kernel/kernel.c $(INC)/versatilepb.h $(INC)/asm.h $(INC)/display.h
-	$(CC) $(CFLAGS) -c kernel/kernel.c -o $(BUILD)/kernel.o
+main.o : kernel/main.c $(INC)/versatilepb.h $(INC)/display.h
+	$(CC) $(CFLAGS) -c kernel/main.c -o $(BUILD)/main.o
 
 context_switch.o : arch/arm/versatilepb/context_switch.s
 	$(CC) $(CFLAGS) -c arch/arm/versatilepb/context_switch.s -o $(BUILD)/context_switch.o
@@ -33,8 +33,14 @@ terminal.o : drivers/terminal.c $(INC)/display.h
 keyboard.o : drivers/keyboard.c $(INC)/display.h
 	$(CC) $(CFLAGS) -c drivers/keyboard.c -o $(BUILD)/keyboard.o
 
-shell.o : kernel/shell.c $(INC)/display.h
+shell.o : kernel/shell.c $(INC)/display.h $(INC)/shell.h
 	$(CC) $(CFLAGS) -c kernel/shell.c -o $(BUILD)/shell.o
+
+string.o : libc/string.c $(INC)/libc/string.h
+	$(CC) $(CFLAGS) -c libc/string.c -o $(BUILD)/string.o
+
+utils.o : kernel/utils.c $(INC)/utils.h
+	$(CC) $(CFLAGS) -c kernel/utils.c -o $(BUILD)/utils.o
 
 .PHONY : run
 run : kernel.elf

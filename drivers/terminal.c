@@ -174,6 +174,7 @@ void term_clear(struct terminal * term)
             screen_draw_point(term->board, pt, term->bg_color);
         }
     }
+    term->cursor = term->lt;
 }
 
 void term_up(struct terminal * term)
@@ -201,7 +202,7 @@ void term_up(struct terminal * term)
 void term_unput(struct terminal * term)
 {
     struct screen_point pt;
-    if ((term->cursor).x - (term->lt).x < FONT_WIDTH) {
+    if ((term->cursor).x <= FONT_WIDTH) {
         if ((term->cursor).y <= (term->lt).y) {
             return;
         } else {
@@ -213,10 +214,12 @@ void term_unput(struct terminal * term)
                 }
             }
             (term->cursor).y -= FONT_HEIGHT;
-            (term->cursor).x = (term->lt).x - (term->width % FONT_WIDTH);
+            (term->cursor).x =
+                (term->lt).x + term->width - (term->width % FONT_WIDTH);
             return;
         }
     }
+    (term->cursor).x -= FONT_WIDTH;
     for (unsigned j = 0; j < FONT_WIDTH; ++j) {
         pt.x = j + (term->lt).x + (term->cursor).x;
         for (unsigned i = 0; i < FONT_HEIGHT; ++i) {
@@ -224,5 +227,11 @@ void term_unput(struct terminal * term)
             screen_draw_point(term->board, pt, term->bg_color);
         }
     }
-    (term->cursor).x -= FONT_WIDTH;
+}
+
+void term_print(struct terminal * term, const char *str)
+{
+    while (*str) {
+        term_putchar(term, *str++);
+    }
 }

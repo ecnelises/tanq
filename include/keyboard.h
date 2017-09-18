@@ -13,6 +13,12 @@
 #define RALT_MASK   0x08000
 #define RCTRL_MASK  0x10000
 
+/* 键盘控制器状态 */
+#define KMI_STATUS *(volatile unsigned *)(0x10006004)
+
+/* 键盘控制器数据 */
+#define KMI_DATA *(volatile unsigned *)(0x10006008)
+
 void handle_key(uint8_t key, void (*cbk)(unsigned));
 
 #endif /* KEYBOARD_H */
