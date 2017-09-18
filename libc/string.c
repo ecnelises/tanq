@@ -22,7 +22,7 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 int strcmp(const char *str1, const char *str2)
 {
-    for (int i = 0; ; i++) {
+    for (unsigned i = 0; ; i++) {
         if (str1[i] != str2[i]) {
             return str1[i] < str2[i] ? -1 : 1;
         }
@@ -34,7 +34,7 @@ int strcmp(const char *str1, const char *str2)
 
 int strncmp(const char *str1, const char *str2, size_t n)
 {
-    for (int i = 0; i < n; i++) {
+    for (unsigned i = 0; i < n; ++i) {
         if (str1[i] != str2[i]) {
             return str1[i] < str2[i] ? -1 : 1;
         }
@@ -43,4 +43,10 @@ int strncmp(const char *str1, const char *str2, size_t n)
         }
     }
     return 0;
+}
+
+char *strncpy(char *dest, const char *src, size_t n)
+{
+    while (n-- && (*dest++ = *src++));
+    return dest;
 }

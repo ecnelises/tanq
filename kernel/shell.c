@@ -2,6 +2,8 @@
 #include "display.h"
 #include "keyboard.h"
 #include "utils.h"
+#include "libc/string.h"
+#include "filesystem.h"
 
 #define HELP_TEXT \
     "New to this shell?\n" \
@@ -50,7 +52,12 @@ void execute(char *command)
 {
     term_putchar(curterm, '\n');
     if (!strcmp(command, "ls")) {
-        print("This is an virtual file system in memory.\n");
+        for (unsigned i = 0; i < FILEMAX; ++i) {
+            if (fs[i].name[0] != '\0') {
+                print(fs[i].name);
+                print("\n");
+            }
+        }
     } else if (!strcmp(command, "help")) {
         print(HELP_TEXT);
     } else if (!strncmp(command, "chbg", 4)) {
@@ -59,7 +66,30 @@ void execute(char *command)
         chfg(curterm, parse_color(command + 5));
     } else if (!strcmp(command, "clear")) {
         term_clear(curterm);
-    } else {
+    } else if (!strcmp(command, "time")) {
+        char buf[10];
+        itoa(ms_since_init / 1000, buf);
+        print(buf);
+        print(".");
+        unsigned fraction = ms_since_init % 1000, modified = 0;
+        if (fraction < 100) {
+            fraction += 100;
+            modified = 1;
+        }
+        itoa(fraction, buf);
+        if (modified) {
+            buf[0] = '0';
+        }
+        print(buf);
+        print(" seconds elapsed since kernel init.\n");
+    } else if (command[0] == '\0') {
+    } else if (!strcmp(command, "splitv")) {
+        term_clear(curterm);
+        curterm->width /= 2;
+    } else if (!strcmp(command, "splits")) {
+        term_clear(curterm);
+        curterm->height /= 2;
+    }else {
         print(command);
         print(": command not found.\n");
     }

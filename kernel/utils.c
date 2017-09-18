@@ -1,5 +1,8 @@
 #include "utils.h"
 #include "versatilepb.h"
+#include <stdbool.h>
+
+unsigned ms_since_init = 0;
 
 void chbg(struct terminal *term, unsigned color)
 {
@@ -43,4 +46,44 @@ void bwputs(const char *str)
 		*UART0 = *str;
 		str++;
 	}
+}
+
+static void reverse(char *str, int length)
+{
+    int start = 0;
+    int end = length -1;
+    while (start < end)
+    {
+        char tmp = *(str + start);
+        *(str + start) = *(str + end);
+        *(str + end) = tmp;
+        start++;
+        end--;
+    }
+}
+
+char *itoa(int num, char *str)
+{
+    int i = 0;
+    bool negative = false;
+    if (num == 0) {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+    if (num < 0) {
+        negative = true;
+        num = -num;
+    }
+    while (num != 0) {
+        int rem = num % 10;
+        str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num / 10;
+    }
+    if (negative) {
+        str[i++] = '-';
+    }
+    str[i] = '\0';
+    reverse(str, i);
+    return str;
 }

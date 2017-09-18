@@ -13,6 +13,7 @@
 struct page_group {
     void *base;
     unsigned bitmap;
+    int next;
 };
 
 struct page_group_entry {
@@ -23,11 +24,14 @@ struct page_group_entry {
 
 /* 初始化内存分配栈 */
 void mm_init(void);
-struct page_group_entry alloc_page(void);
+void *alloc_page(void);
 
 /* n 不能大于 32 */
 struct page_group_entry alloc_multipage(unsigned n);
-void free_page(struct page_group_entry ptr);
+void free_page_entry(struct page_group_entry ptr);
+
+/* 释放单个页面 */
+void free_page(void *ptr);
 
 /* 分配内存块，同样不能大于 128 KB，即 131072 */
 void *kalloc(unsigned size);
