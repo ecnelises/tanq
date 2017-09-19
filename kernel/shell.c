@@ -11,6 +11,23 @@
     "This is tanq, a simple OS running on ARM versatile platform.\n" \
     "Type 'cmd' for a list of available commands.\n"
 
+#define CMD_LIST \
+    "ls - List files stored in memory filesystem.\n" \
+    "help - Get an introduction of the system.\n" \
+    "chbg - Change background color.\n" \
+    "chfg - Change foreground color.\n" \
+    "clear - Clear the current screen.\n" \
+    "memstats - Get statistics on dynamic memory pages information.\n" \
+    "time - Output seconds since this launch.\n" \
+    "sleep - Sleep for specified seconds.\n" \
+    "create - Create a new file in filesystem.\n" \
+    "edit - Edit file with specified name.\n" \
+    "cat - Output content of a file.\n" \
+    "newwin - Create a new window and enter it.\n" \
+    "winstats - List available windows.\n" \
+    "chwin - Change active window to another one.\n" \
+    "exit - Exit current window.\n"
+
 char term_buf[64];
 char edit_buf[512];
 char editing[16];
@@ -105,8 +122,8 @@ void execute(char *command)
     } else if (!strcmp(command, "splits")) {
         term_clear(curterm);
         curterm->height /= 2;
-    } else if (!strcmp(command, "sleep")) {
-        sleep(3000);
+    } else if (!strncmp(command, "sleep", 5) && command[5] == ' ') {
+        sleep(atoi(next_nonblank(command + 5)) * 1000);
     } else if (!strncmp(command, "create", 6) && command[6] == ' ') {
         const char *filename = next_nonblank(command + 6);
         if (find_file(filename)) {
@@ -157,6 +174,8 @@ void execute(char *command)
         print(".\nAnd there's ");
         term_printi(curterm, PAGENUM - num);
         print(" pages left.\n");
+    } else if (!strcmp(command, "cmd")) {
+        print(CMD_LIST);
     } else {
         print(command);
         print(": command not found.\n");
