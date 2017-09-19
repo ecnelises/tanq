@@ -1,5 +1,6 @@
 #include "filesystem.h"
 #include "memory.h"
+#include "utils.h"
 #include "libc/string.h"
 
 struct file fs[FILEMAX];
@@ -14,10 +15,10 @@ void init_fs(void)
     }
 }
 
-void create_file(const char *name)
+bool create_file(const char *name)
 {
-    if (file_count == FILEMAX) {
-        return;
+    if (file_count == FILEMAX || strlen(name) >= 15) {
+        return false;
     }
     ++file_count;
     for (unsigned i = 0; i < FILEMAX; ++i) {
@@ -26,6 +27,7 @@ void create_file(const char *name)
             break;
         }
     }
+    return true;
 }
 
 void clear_file(const char *name)

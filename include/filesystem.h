@@ -15,7 +15,7 @@ extern struct file fs[FILEMAX];
 extern unsigned file_count;
 
 void init_fs(void);
-void create_file(const char *name);
+bool create_file(const char *name);
 void clear_file(const char *name);
 char *read_file(const char *name);
 void write_file(const char *name, const char *buf);

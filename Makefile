@@ -5,7 +5,7 @@ CFLAGS = -ansi -pedantic -Wall -Wextra -march=armv6 -O2 \
 		 -msoft-float -fPIC -mapcs-frame -marm -std=c99 -I$(INC)
 LDFLAGS = -N -Ttext=0x10000
 BUILD = ./build
-OBJ = bootstrap.o main.o context_switch.o syscalls.o display.o \
+OBJ = bootstrap.o main.o context_switch.o display.o \
 	  terminal.o keyboard.o shell.o string.o utils.o filesystem.o \
 	  memory.o
 INC = ./include
@@ -21,9 +21,6 @@ main.o : kernel/main.c $(INC)/versatilepb.h $(INC)/display.h
 
 context_switch.o : arch/arm/versatilepb/context_switch.s
 	$(CC) $(CFLAGS) -c arch/arm/versatilepb/context_switch.s -o $(BUILD)/context_switch.o
-
-syscalls.o : arch/arm/versatilepb/syscalls.s
-	$(CC) $(CFALGS) -c arch/arm/versatilepb/syscalls.s -o $(BUILD)/syscalls.o
 
 display.o : drivers/display.c $(INC)/display.h
 	$(CC) $(CFLAGS) -c drivers/display.c -o $(BUILD)/display.o

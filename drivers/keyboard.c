@@ -97,6 +97,7 @@
 static unsigned special_key_status = 0;
 static int spcl_prefix_cnt = 0;
 static int up_prefix_cnt = 0;
+void (*global_key_handler)(unsigned);
 
 #define SET_BIT(val, mask) ((val) |= (mask))
 #define UNSET_BIT(val, mask) ((val) &= ~(mask))

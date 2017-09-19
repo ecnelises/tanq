@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "versatilepb.h"
+#include "interrupt.h"
 #include <stdbool.h>
 
 unsigned ms_since_init = 0;
@@ -85,5 +86,33 @@ char *itoa(int num, char *str)
     }
     str[i] = '\0';
     reverse(str, i);
+    return str;
+}
+
+void sleep(unsigned ms)
+{
+    PIC_ENSET |= 0x10;
+    TIMER0_DATA = ms * 1000;
+    TIMER0_CTRL = 0xA3;
+    for (;;) {
+        if (PIC_INTERRUPT_STATUS & 0x10) {
+            TIMER0_CLR = 1;
+            break;
+        }
+    }
+}
+
+void bwputi(int val)
+{
+    char buf[12];
+    itoa(val, buf);
+    bwputs(buf);
+}
+
+const char *next_nonblank(const char *str)
+{
+    while (*str && *str == ' ') {
+        ++str;
+    }
     return str;
 }

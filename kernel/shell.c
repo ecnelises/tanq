@@ -11,14 +11,39 @@
     "Type 'cmd' for a list of available commands.\n"
 
 char term_buf[64];
+char edit_buf[512];
+char editing[16];
+unsigned edit_buf_len;
 unsigned term_buf_len;
+
+void edit_mode(const char *file);
 
 /* 初始化控制台 */
 void init_shell(void)
 {
+    global_key_handler = shell_key_handler;
     print("shell >");
     term_buf_len = 0;
     term_buf[0] = '\0';
+}
+
+static void time_elapsed(void)
+{
+    char buf[10];
+    itoa(ms_since_init / 1000, buf);
+    print(buf);
+    print(".");
+    unsigned fraction = ms_since_init % 1000, modified = 0;
+    if (fraction < 100) {
+        fraction += 100;
+        modified = 1;
+    }
+    itoa(fraction, buf);
+    if (modified) {
+        buf[0] = '0';
+    }
+    print(buf);
+    print(" seconds elapsed since kernel init.\n");
 }
 
 static unsigned parse_color(const char *str)
@@ -41,7 +66,7 @@ static unsigned parse_color(const char *str)
         } else if (str[i] <= '9' && str[i] >= '0') {
             vals[i] = str[i] - '0';
         } else {
-            vals[i] = 0xF;
+            return COLOR_WHITE;
         }
     }
     return (vals[0] << 4) | (vals[1]) | (vals[2] << 12) |
@@ -50,6 +75,7 @@ static unsigned parse_color(const char *str)
 
 void execute(char *command)
 {
+    command = next_nonblank(command);
     term_putchar(curterm, '\n');
     if (!strcmp(command, "ls")) {
         for (unsigned i = 0; i < FILEMAX; ++i) {
@@ -58,30 +84,19 @@ void execute(char *command)
                 print("\n");
             }
         }
+        print("----------\n");
+        term_printi(curterm, file_count);
+        print(" files in total.\n");
     } else if (!strcmp(command, "help")) {
         print(HELP_TEXT);
     } else if (!strncmp(command, "chbg", 4)) {
-        chbg(curterm, parse_color(command + 5));
+        chbg(curterm, parse_color(next_nonblank(command + 4)));
     } else if (!strncmp(command, "chfg", 4)) {
-        chfg(curterm, parse_color(command + 5));
+        chfg(curterm, parse_color(next_nonblank(command + 4)));
     } else if (!strcmp(command, "clear")) {
         term_clear(curterm);
     } else if (!strcmp(command, "time")) {
-        char buf[10];
-        itoa(ms_since_init / 1000, buf);
-        print(buf);
-        print(".");
-        unsigned fraction = ms_since_init % 1000, modified = 0;
-        if (fraction < 100) {
-            fraction += 100;
-            modified = 1;
-        }
-        itoa(fraction, buf);
-        if (modified) {
-            buf[0] = '0';
-        }
-        print(buf);
-        print(" seconds elapsed since kernel init.\n");
+        time_elapsed();
     } else if (command[0] == '\0') {
     } else if (!strcmp(command, "splitv")) {
         term_clear(curterm);
@@ -89,10 +104,74 @@ void execute(char *command)
     } else if (!strcmp(command, "splits")) {
         term_clear(curterm);
         curterm->height /= 2;
-    }else {
+    } else if (!strcmp(command, "sleep")) {
+        sleep(3000);
+    } else if (!strncmp(command, "create", 6) && command[6] == ' ') {
+        const char *filename = next_nonblank(command + 6);
+        if (find_file(filename)) {
+            print(filename);
+            print(" already exists!\n");
+        } else if (create_file(filename)) {
+            print("Successfully created file.\n");
+        } else {
+            print("Sorrt, unable to create file.\n");
+        }
+    } else if (!strncmp(command, "cat", 3)) {
+        const char *filename = next_nonblank(command + 3);
+        if (!find_file(filename)) {
+            print("File '");
+            print(filename);
+            print("' doesn't exist!\n");
+        } else {
+            print(read_file(filename));
+            print("\n");
+        }
+    } else if (!strncmp(command, "edit", 4) && command[4] == ' ') {
+        const char *filename = next_nonblank(command + 4);
+        if (!find_file(filename)) {
+            print("File '");
+            print(filename);
+            print("' doesn't exist!\n");
+        } else {
+            edit_mode(filename);
+        }
+    } else {
         print(command);
         print(": command not found.\n");
     }
+}
+
+static char shift_escape(char c)
+{
+    if (c >= 'a' && c <= 'z') {
+        c += 'A' - 'a';
+    } else {
+        switch (c) {
+        case '`': c = '~'; break;
+        case '1': c = '!'; break;
+        case '2': c = '@'; break;
+        case '3': c = '#'; break;
+        case '4': c = '$'; break;
+        case '5': c = '%'; break;
+        case '6': c = '^'; break;
+        case '7': c = '&'; break;
+        case '8': c = '*'; break;
+        case '9': c = '('; break;
+        case '0': c = ')'; break;
+        case '-': c = '_'; break;
+        case '=': c = '+'; break;
+        case '[': c = '{'; break;
+        case ']': c = '}'; break;
+        case ';': c = ';'; break;
+        case '\'': c = '\"'; break;
+        case ',': c = '<'; break;
+        case '.': c = '>'; break;
+        case '/': c = '?'; break;
+        case '\\': c = '|'; break;
+        default: break;
+        }
+    }
+    return c;
 }
 
 void shell_key_handler(unsigned k)
@@ -101,41 +180,16 @@ void shell_key_handler(unsigned k)
     char realchar = k & 0xFF;
     /* 判断 SHIFT 键 */
     if (k & LSHIFT_MASK || k & RSHIFT_MASK) {
-        if (realchar >= 'a' && realchar <= 'z') {
-            realchar += ('A' - 'a');
-        } else {
-            switch (realchar) {
-            case '`': realchar = '~'; break;
-            case '1': realchar = '!'; break;
-            case '2': realchar = '@'; break;
-            case '3': realchar = '#'; break;
-            case '4': realchar = '$'; break;
-            case '5': realchar = '%'; break;
-            case '6': realchar = '^'; break;
-            case '7': realchar = '&'; break;
-            case '8': realchar = '*'; break;
-            case '9': realchar = '('; break;
-            case '0': realchar = ')'; break;
-            case '-': realchar = '_'; break;
-            case '=': realchar = '+'; break;
-            case '[': realchar = '{'; break;
-            case ']': realchar = '}'; break;
-            case ';': realchar = ';'; break;
-            case '\'': realchar = '\"'; break;
-            case ',': realchar = '<'; break;
-            case '.': realchar = '>'; break;
-            case '/': realchar = '?'; break;
-            case '\\': realchar = '|'; break;
-            default: break;
-            }
-        }
+        realchar = shift_escape(realchar);
     }
     if (term_buf_len < 63) {
         if (realchar == '\n') {
             term_buf[term_buf_len++] = '\0';
             execute(term_buf);
-            term_buf_len = 0;
-            print("shell >");
+            if (global_key_handler == shell_key_handler) {
+                term_buf_len = 0;
+                print("shell >");
+            }
         } else if (realchar == '\b') {
             if (term_buf_len > 0) {
                 term_unput(curterm);
@@ -147,4 +201,58 @@ void shell_key_handler(unsigned k)
             term_buf[term_buf_len++] = realchar;
         }
     }
+}
+
+static void edit_quit(bool save)
+{
+    if (save) {
+        write_file(editing, edit_buf);
+    }
+    term_clear(curterm);
+    init_shell();
+}
+
+void edit_key_handler(unsigned k)
+{
+    char ch = k & 0xFF;
+    if ((k & LCTRL_MASK || k & RCTRL_MASK) && ch == 'w') {
+        if (ch == 'w') {
+            edit_quit(true);
+            return;
+        } else if (ch == 'q') {
+            edit_quit(false);
+            return;
+        }
+    }
+    if (k & LSHIFT_MASK || k & RSHIFT_MASK) {
+        ch = shift_escape(ch);
+    }
+    if (edit_buf_len < 512) {
+        if (ch == '\b') {
+            if (edit_buf_len > 0) {
+                /* FIXME: 回退到上一行的时候光标计算会出问题 */
+                term_unput(curterm);
+                edit_buf[edit_buf_len] = '\0';
+                --edit_buf_len;
+            }
+        } else if (ch == '\t') {
+        } else {
+            term_putchar(curterm, ch);
+            edit_buf[edit_buf_len++] = ch;
+        }
+    }
+}
+
+void edit_mode(const char *file)
+{
+    term_clear(curterm);
+    strncpy(editing, file, 16);
+    char *content = read_file(file);
+    edit_buf_len = 0;
+    for (unsigned i = 0; i < strlen(content); ++i) {
+        term_putchar(curterm, content[i]);
+        edit_buf[edit_buf_len++] = content[i];
+    }
+    edit_buf[edit_buf_len] = '\0';
+    global_key_handler = edit_key_handler;
 }

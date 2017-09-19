@@ -1,4 +1,5 @@
 #include "display.h"
+#include "utils.h"
 
 /* 字体从空格开始 */
 #define FONTTBL_OFFSET 32u
@@ -234,4 +235,11 @@ void term_print(struct terminal * term, const char *str)
     while (*str) {
         term_putchar(term, *str++);
     }
+}
+
+void term_printi(struct terminal * term, int val)
+{
+    char buf[12];
+    itoa(val, buf);
+    term_print(term, buf);
 }

@@ -1,7 +1,7 @@
 #include "memory.h"
 #include "utils.h"
 
-#define START_ADDRESS 0x1000000
+#define START_ADDRESS 0x2000000
 #define STACK_DEPTH PAGENUM / sizeof(unsigned)
 #define GROUP_LEN 32 * 4096
 
@@ -28,7 +28,7 @@ void *alloc_page(void)
     void *result = 0;
     for (unsigned i = 0; i < sizeof(unsigned); ++i) {
         if (mm_stack_top->bitmap & (1 << i)) {
-            result = (void *)((unsigned)mm_stack_top->base + i);
+            result = (void *)((unsigned)mm_stack_top->base + i * 4096);
             mm_stack_top->bitmap |= 1 << i;
             break;
         }

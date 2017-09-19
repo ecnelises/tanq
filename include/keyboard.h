@@ -21,4 +21,6 @@
 
 void handle_key(uint8_t key, void (*cbk)(unsigned));
 
+extern void (*global_key_handler)(unsigned);
+
 #endif /* KEYBOARD_H */
