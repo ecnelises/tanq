@@ -11,6 +11,7 @@ void chfg(struct terminal *term, unsigned color);
 void bwputs(const char *str);
 void bwputi(int val);
 char *itoa(int num, char* str);
+int atoi(const char *buf);
 void sleep(unsigned ms);
 const char *next_nonblank(const char *str);
 

@@ -116,3 +116,21 @@ const char *next_nonblank(const char *str)
     }
     return str;
 }
+
+int atoi(const char *buf)
+{
+    int value = 0;
+    int sign = 1;
+    if (*buf == '+' || *buf == '-') {
+        if (*buf == '-') {
+            sign = -1;
+        }
+        ++buf;
+    }
+    while (*buf <= '9' && *buf >= '0') {
+        value *= 10;
+        value += (int)(*buf - '0');
+        ++buf;
+    }
+    return (value * sign);
+}

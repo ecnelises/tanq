@@ -1,7 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#define PAGENUM sizeof(unsigned) * 256
+#define PAGENUM sizeof(unsigned) * 8 * 256
 
 /*
  * 由于我们在这里并没有开启 MMU，所以还无法做到大连续块的内存分配
@@ -36,5 +36,7 @@ void free_page(void *ptr);
 /* 分配内存块，同样不能大于 128 KB，即 131072 */
 void *kalloc(unsigned size);
 void kfree(void *ptr);
+
+unsigned pages_used(void);
 
 #endif /* MEMORY_H */

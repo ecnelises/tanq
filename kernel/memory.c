@@ -2,11 +2,18 @@
 #include "utils.h"
 
 #define START_ADDRESS 0x2000000
-#define STACK_DEPTH PAGENUM / sizeof(unsigned)
+#define STACK_DEPTH PAGENUM / (sizeof(unsigned) * 8)
 #define GROUP_LEN 32 * 4096
 
 struct page_group mm_stack[STACK_DEPTH];
 struct page_group *mm_stack_top;
+
+static unsigned used_pages = 0;
+
+unsigned pages_used(void)
+{
+    return used_pages;
+}
 
 void mm_init()
 {
@@ -27,12 +34,13 @@ void *alloc_page(void)
     }
     void *result = 0;
     for (unsigned i = 0; i < sizeof(unsigned); ++i) {
-        if (mm_stack_top->bitmap & (1 << i)) {
+        if (!(mm_stack_top->bitmap & (1 << i))) {
             result = (void *)((unsigned)mm_stack_top->base + i * 4096);
             mm_stack_top->bitmap |= 1 << i;
             break;
         }
     }
+    ++used_pages;
     if (mm_stack_top->bitmap == (unsigned)~0) {
         mm_stack_top = mm_stack + mm_stack_top->next;
     }
@@ -99,6 +107,7 @@ struct page_group_entry alloc_multipage(unsigned n)
     } else {
         find_upper_entry(&entry, n);
     }
+    used_pages += n;
     return entry;
 }
 
@@ -109,6 +118,7 @@ void free_page_entry(struct page_group_entry ptr)
     unsigned index = df * 4 / GROUP_LEN;
     for (int i = ptr.start; i <= ptr.end; ++i) {
         mm_stack[index].bitmap &= ~(1 << i);
+        --used_pages;
     }
     if (mm_stack[index].bitmap == 0) {
         mm_stack[index].next = mm_stack_top->next;
@@ -126,6 +136,7 @@ void free_page(void *ptr)
         mm_stack[index].next = mm_stack_top->next;
         mm_stack_top->next = index;
     }
+    --used_pages;
 }
 
 /* 分配内存块，同样不能大于 128 KB，即 131072 */

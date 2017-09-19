@@ -7,7 +7,7 @@ LDFLAGS = -N -Ttext=0x10000
 BUILD = ./build
 OBJ = bootstrap.o main.o context_switch.o display.o \
 	  terminal.o keyboard.o shell.o string.o utils.o filesystem.o \
-	  memory.o
+	  memory.o window.o
 INC = ./include
 
 kernel.elf : $(OBJ)
@@ -45,6 +45,9 @@ filesystem.o : kernel/filesystem.c $(INC)/filesystem.h $(INC)/libc/string.h
 
 memory.o : kernel/memory.c $(INC)/memory.h
 	$(CC) $(CFLAGS) -c kernel/memory.c -o $(BUILD)/memory.o
+
+window.o : kernel/window.c $(INC)/display.h
+	$(CC) $(CFLAGS) -c kernel/window.c -o $(BUILD)/window.o
 
 .PHONY : run
 run : kernel.elf

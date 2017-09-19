@@ -1,6 +1,8 @@
 #include "display.h"
 #include "utils.h"
 
+struct terminal *curterm;
+
 /* 字体从空格开始 */
 #define FONTTBL_OFFSET 32u
 #define FONT_WIDTH 11u

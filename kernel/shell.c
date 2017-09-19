@@ -3,6 +3,7 @@
 #include "keyboard.h"
 #include "utils.h"
 #include "libc/string.h"
+#include "memory.h"
 #include "filesystem.h"
 
 #define HELP_TEXT \
@@ -114,7 +115,7 @@ void execute(char *command)
         } else if (create_file(filename)) {
             print("Successfully created file.\n");
         } else {
-            print("Sorrt, unable to create file.\n");
+            print("Sorry, unable to create file.\n");
         }
     } else if (!strncmp(command, "cat", 3)) {
         const char *filename = next_nonblank(command + 3);
@@ -135,6 +136,27 @@ void execute(char *command)
         } else {
             edit_mode(filename);
         }
+    } else if (!strcmp(command, "newwin")) {
+        if (!win_create()) {
+            print("Error in creating new window.\n");
+        }
+    } else if (!strncmp(command, "chwin", 5) && command[5] == ' ') {
+        if (!win_change(atoi(next_nonblank(command + 5)))) {
+            print("Error in changing window.\n");
+        }
+    } else if (!strcmp(command, "winstats")) {
+        win_stats();
+    } else if (!strcmp(command, "exit")) {
+        if (!win_exit()) {
+            print("There's only 1 window left. Cannot exit.\n");
+        }
+    } else if (!strcmp(command, "memstats")) {
+        unsigned num = pages_used();
+        print("Number of memory pages used is ");
+        term_printi(curterm, num);
+        print(".\nAnd there's ");
+        term_printi(curterm, PAGENUM - num);
+        print(" pages left.\n");
     } else {
         print(command);
         print(": command not found.\n");

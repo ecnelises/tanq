@@ -9,7 +9,6 @@
 
 struct screen scr;
 struct terminal term;
-struct terminal *curterm;
 
 #define char_visible(c) ((c) >= 32 && (c) <= 127)
 
@@ -25,8 +24,9 @@ void init_kernel(void)
     /* 启用次级中断控制器 */
     *(volatile unsigned *)(0x10003008) = 0x08;
     /* 初始化屏幕显示 */
-    term_full(&scr, &term);
-    curterm = &term;
+    win_create();
+    // term_full(&scr, &term);
+    // curterm = &term;
     TIMER2_DATA = 1000;
     TIMER2_CTRL = 0xE2; /* 周期性，32 位计时器 */
     PIC_ENSET = 0x30;
@@ -59,8 +59,8 @@ void init_welcome(void)
 
 int main(void)
 {
-    // init_welcome();
-    screen_init(&scr, SCR_SVGA);
+    init_welcome();
+    init_wins();
     init_kernel();
     init_fs();
     init_shell();

@@ -1,6 +1,8 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#include <stdbool.h>
+
 /* 预设显示设置 */
 #define SCR_QVGAP 0x00
 #define SCR_QVGAL 0x01
@@ -57,8 +59,23 @@ void term_print(struct terminal * term, const char *str);
 void term_printi(struct terminal * term, int val);
 void term_up(struct terminal * term);
 
+extern struct screen scr;
+extern struct window *curwin;
 extern struct terminal *curterm;
 
 #define print(str) term_print(curterm, str)
+
+struct window {
+    unsigned id;
+    struct terminal tms[2];
+    unsigned *tmp_buf[16];
+    bool backuped;
+};
+
+void init_wins(void);
+bool win_create(void);
+bool win_exit(void);
+bool win_change(unsigned id);
+void win_stats(void);
 
 #endif /* DISPLAY_H */
