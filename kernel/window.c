@@ -57,7 +57,7 @@ bool win_change(unsigned id)
 
 void win_stats(void)
 {
-    print("Current number of windows is ");
+    print("Number of windows is ");
     term_printi(curterm, win_num);
     print("\nId of them are:\n");
     for (unsigned i = 0; i < 4; ++i) {
@@ -66,6 +66,9 @@ void win_stats(void)
             print("\n");
         }
     }
+    print("Now we are in window ");
+    term_printi(curterm, curwin->id);
+    print(".\n");
 }
 
 bool win_exit(void)
